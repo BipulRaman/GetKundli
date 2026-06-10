@@ -177,3 +177,19 @@ export function vargaSign(longitude: number, factor: number): number {
       return sign;
   }
 }
+
+/**
+ * Approximate degree (0-30) of a planet within its divisional-chart sign.
+ *
+ * Each rashi (30°) is split into `factor` equal amshas; the planet's
+ * proportional position inside its amsha is rescaled to a full 30° sign so the
+ * value can be shown alongside the glyph in any chart style. For D1 this is just
+ * the natal degree within the sign.
+ */
+export function vargaDegree(longitude: number, factor: number): number {
+  const deg = ((longitude % 30) + 30) % 30;
+  if (factor <= 1) return deg;
+  const amsa = 30 / factor;
+  const within = deg % amsa;
+  return (within / amsa) * 30;
+}

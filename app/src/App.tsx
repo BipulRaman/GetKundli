@@ -9,6 +9,7 @@ import NorthIndianChart from "./components/NorthIndianChart";
 import SouthIndianChart from "./components/SouthIndianChart";
 import EastIndianChart from "./components/EastIndianChart";
 import PlanetTable from "./components/PlanetTable";
+import Shadbala from "./components/Shadbala";
 import DashaTable, { dashaAnchorId } from "./components/DashaTable";
 import Interpretations from "./components/Interpretations";
 import Panchang from "./components/Panchang";
@@ -22,6 +23,7 @@ type Style = "north" | "south" | "east";
 type PageId =
   | "overview"
   | "planets"
+  | "shadbala"
   | "charts"
   | "dashas"
   | "ashtaka"
@@ -38,6 +40,7 @@ const STYLES: { id: Style; label: string }[] = [
 const PAGES: { id: PageId; label: string }[] = [
   { id: "overview", label: "Overview" },
   { id: "planets", label: "Planets" },
+  { id: "shadbala", label: "Shadbala" },
   { id: "charts", label: "Divisional Charts" },
   { id: "dashas", label: "Dashas" },
   { id: "ashtaka", label: "Ashtakavarga" },
@@ -381,12 +384,20 @@ export default function App() {
               <span className="doc-page-no">Page 2</span>
             </section>
 
+            <section id="shadbala" ref={setPageRef("shadbala")} className="doc-page">
+              <header className="doc-page-head">
+                <h2>Shadbala</h2>
+              </header>
+              <Shadbala result={result} />
+              <span className="doc-page-no">Page 3</span>
+            </section>
+
             <section id="charts" ref={setPageRef("charts")} className="doc-page">
               <header className="doc-page-head">
                 <h2>Divisional Charts</h2>
               </header>
               <DivisionalCharts result={result} style={style} />
-              <span className="doc-page-no">Page 3</span>
+              <span className="doc-page-no">Page 4</span>
             </section>
 
             <section id="dashas" ref={setPageRef("dashas")} className="doc-page">
@@ -394,7 +405,7 @@ export default function App() {
                 <h2>Vimshottari Dashas</h2>
               </header>
               <DashaTable result={result} />
-              <span className="doc-page-no">Page 4</span>
+              <span className="doc-page-no">Page 5</span>
             </section>
 
             <section id="ashtaka" ref={setPageRef("ashtaka")} className="doc-page">
@@ -402,7 +413,7 @@ export default function App() {
                 <h2>Ashtakavarga</h2>
               </header>
               <Ashtakavarga result={result} />
-              <span className="doc-page-no">Page 5</span>
+              <span className="doc-page-no">Page 6</span>
             </section>
 
             <section id="yogas" ref={setPageRef("yogas")} className="doc-page">
@@ -410,7 +421,7 @@ export default function App() {
                 <h2>Yogas &amp; Doshas</h2>
               </header>
               <YogasDoshas result={result} />
-              <span className="doc-page-no">Page 6</span>
+              <span className="doc-page-no">Page 7</span>
             </section>
 
             <section id="varshphal" ref={setPageRef("varshphal")} className="doc-page">
@@ -418,7 +429,7 @@ export default function App() {
                 <h2>Varshphal</h2>
               </header>
               <Varshphal result={result} style={style} />
-              <span className="doc-page-no">Page 7</span>
+              <span className="doc-page-no">Page 8</span>
             </section>
 
             <section
@@ -430,7 +441,7 @@ export default function App() {
                 <h2>Interpretation</h2>
               </header>
               <Interpretations result={result} />
-              <span className="doc-page-no">Page 8</span>
+              <span className="doc-page-no">Page 9</span>
             </section>
         </div>
       </main>

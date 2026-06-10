@@ -21,6 +21,7 @@ import { dignityOf, type PlanetDignity } from "./dignity";
 import { computeAshtakavarga, type AshtakavargaResult } from "./ashtakavarga";
 import { detectYogas, type Yoga } from "./yogas";
 import { detectDoshas, type Dosha } from "./doshas";
+import { computeShadbala, type ShadbalaResult } from "./shadbala";
 
 /** Full chart result enriched with panchang, dignities, ashtakavarga, yogas & doshas. */
 export interface DetailedKundli extends KundliResult {
@@ -29,6 +30,7 @@ export interface DetailedKundli extends KundliResult {
   ashtakavarga: AshtakavargaResult;
   yogas: Yoga[];
   doshas: Dosha[];
+  shadbala: ShadbalaResult;
   /** Natal Sun sidereal longitude, reused by Varshphal. */
   natalSunSidereal: number;
 }
@@ -107,6 +109,16 @@ export function generateKundli(input: BirthInput, now: Date = new Date()): Detai
   const moonSign = signOf(moon.siderealLongitude);
   const doshas = detectDoshas(planets, moonSign, transitSaturnSign);
 
+  // Shadbala (six-fold strength of the seven grahas).
+  const shadbala = computeShadbala({
+    planets,
+    ascendantLongitude: ascLon,
+    ayanamsa,
+    panchang,
+    utcDate: utc,
+    localHour: input.hour + input.minute / 60 + input.second / 3600,
+  });
+
   return {
     input,
     utcDate: utc,
@@ -121,6 +133,7 @@ export function generateKundli(input: BirthInput, now: Date = new Date()): Detai
     ashtakavarga,
     yogas,
     doshas,
+    shadbala,
     natalSunSidereal: sun.siderealLongitude,
   };
 }

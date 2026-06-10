@@ -159,3 +159,34 @@ export function dignityOf(
 
   return { signLord, dignity, exaltScore, combust };
 }
+
+/**
+ * Uchcha Bala (exaltation strength) in virupas, 0-60. Peaks (60) at the deep
+ * exaltation point and is zero at the deep debilitation point. Nodes return 0.
+ */
+export function uchchaBala(planet: PlanetId, longitude: number): number {
+  const ex = EXALTATION[planet];
+  if (!ex) return 0;
+  const debLon = ((ex.sign + 6) % 12) * 30 + ex.deg;
+  let d = Math.abs(longitude - debLon);
+  if (d > 180) d = 360 - d;
+  return d / 3; // 0..60
+}
+
+/**
+ * Saptavargaja-style dignity points (virupas) for a planet sitting in a sign,
+ * used when summing strength across the seven vargas. Uses natural
+ * relationships plus exaltation / moolatrikona / own-sign placement.
+ */
+export function saptaVargaPoints(planet: PlanetId, sign: number): number {
+  const ex = EXALTATION[planet];
+  if (ex && sign === ex.sign) return 45; // exalted
+  if (ex && sign === (ex.sign + 6) % 12) return 1.875; // debilitated
+  if (MOOLATRIKONA[planet] === sign) return 45;
+  if (OWN_SIGNS[planet]?.includes(sign)) return 30;
+  const lord = SIGN_LORD[sign];
+  if (lord === planet) return 30;
+  if (FRIENDS[planet]?.includes(lord)) return 15;
+  if (ENEMIES[planet]?.includes(lord)) return 3.75;
+  return 7.5; // neutral
+}

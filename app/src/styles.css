@@ -974,6 +974,11 @@ button.primary:active {
 .planet.retro {
   fill: var(--retro);
 }
+.planet-deg {
+  font-size: 8px;
+  font-weight: 500;
+  fill: var(--muted, #8a7d63);
+}
 
 /* ---- Panels & tables ---- */
 .panel {

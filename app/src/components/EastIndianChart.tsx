@@ -76,6 +76,9 @@ export default function EastIndianChart({ cells, title }: Props) {
                   className={`planet${p.retrograde ? " retro" : ""}`}
                 >
                   {PLANET_SHORT[p.id]}
+                  <tspan className="planet-deg" dx={1}>
+                    {Math.round(p.degree)}
+                  </tspan>
                 </text>
               ))}
             </g>
