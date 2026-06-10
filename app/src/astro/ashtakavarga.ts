@@ -5,7 +5,15 @@ import type { PlanetId } from "./types";
  * lists — for every reference body (the seven grahas + the Lagna) — the houses
  * (counted from that reference) where the subject contributes one bindu.
  */
-type Ref = PlanetId | "Lagna";
+type Graha =
+  | "Sun"
+  | "Moon"
+  | "Mars"
+  | "Mercury"
+  | "Jupiter"
+  | "Venus"
+  | "Saturn";
+type Ref = Graha | "Lagna";
 
 const REFS: Ref[] = [
   "Sun",
@@ -18,7 +26,7 @@ const REFS: Ref[] = [
   "Lagna",
 ];
 
-const BENEFIC_PLACES: Record<string, Record<Ref, number[]>> = {
+const BENEFIC_PLACES: Record<Graha, Record<Ref, number[]>> = {
   Sun: {
     Sun: [1, 2, 4, 7, 8, 9, 10, 11],
     Moon: [3, 6, 10, 11],
@@ -91,7 +99,7 @@ const BENEFIC_PLACES: Record<string, Record<Ref, number[]>> = {
   },
 };
 
-const SUBJECTS: PlanetId[] = [
+const SUBJECTS: Graha[] = [
   "Sun",
   "Moon",
   "Mars",

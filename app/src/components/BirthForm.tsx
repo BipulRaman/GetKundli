@@ -100,7 +100,9 @@ export default function BirthForm({ onSubmit }: Props) {
   function saveRecent(input: BirthInput) {
     setRecents((list) => {
       const filtered = list.filter(
-        (r) => r.name.trim().toLowerCase() !== input.name.trim().toLowerCase(),
+        (r) =>
+          (r.name ?? "").trim().toLowerCase() !==
+          (input.name ?? "").trim().toLowerCase(),
       );
       return [input, ...filtered].slice(0, 20);
     });
@@ -109,7 +111,7 @@ export default function BirthForm({ onSubmit }: Props) {
   // Load a saved input back into the form.
   function loadRecent(input: BirthInput) {
     setForm(input);
-    const cz = `${countryForZone(input.timeZone)?.code ?? DEFAULT_COUNTRY}|${input.timeZone}`;
+    const cz = `${countryForZone(input.timeZone ?? "")?.code ?? DEFAULT_COUNTRY}|${input.timeZone}`;
     setCzValue(cz);
   }
 
@@ -124,7 +126,7 @@ export default function BirthForm({ onSubmit }: Props) {
       className="birth-form"
       onSubmit={(e) => {
         e.preventDefault();
-        if (!form.name.trim()) return;
+        if (!form.name?.trim()) return;
         const input = { ...form, name: form.name.trim() };
         saveRecent(input);
         onSubmit(input);

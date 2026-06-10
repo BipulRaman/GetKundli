@@ -4,7 +4,6 @@ import {
   degreeInSign,
   houseOf,
   nakshatraOf,
-  navamsaSign,
   padaOf,
   signOf,
 } from "./divisional";

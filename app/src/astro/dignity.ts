@@ -120,7 +120,6 @@ export function dignityOf(
   retrograde: boolean,
 ): PlanetDignity {
   const sign = Math.floor(longitude / 30) % 12;
-  const deg = longitude % 30;
   const signLord = SIGN_LORD[sign];
 
   let dignity: Dignity;

@@ -30,7 +30,6 @@ export const VARGAS: VargaDef[] = [
 
 const MOVABLE = 0; // chara
 const FIXED = 1; // sthira
-const DUAL = 2; // dvisvabhava
 
 function modality(sign: number): number {
   return sign % 3; // 0 movable, 1 fixed, 2 dual
