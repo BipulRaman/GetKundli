@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { BirthInput } from "../astro/types";
-import { resolveOffsetHours } from "../astro/timeUtils";
+import { zoneOffsetHoursAt } from "../astro/timeUtils";
 import { COUNTRIES, countryForZone } from "../data/timezones";
 
 interface Props {
@@ -71,13 +71,16 @@ interface CountryZoneOption {
   zone: string;
 }
 
+/** Reference instant used to label each zone's current UTC offset. */
+const OFFSET_REF_INSTANT = new Date();
+
 /** Flattened, alphabetically grouped list of every Country | TZ Location pair. */
 const COUNTRY_ZONE_OPTIONS: CountryZoneOption[] = [...COUNTRIES]
   .sort((a, b) => a.name.localeCompare(b.name))
   .flatMap((c) =>
     c.zones.map((zone) => ({
       value: `${c.code}|${zone}`,
-      label: `${c.name} | ${zone.replace(/_/g, " ")}`,
+      label: `${c.name} | ${zone.replace(/_/g, " ")} (${zoneOffsetLabel(zone)})`,
       countryCode: c.code,
       zone,
     }))
@@ -136,9 +139,6 @@ export default function BirthForm({ onSubmit, initial, style, onStyleChange }: P
       /* ignore storage errors */
     }
   }, [recents]);
-
-  // Live UTC offset for the chosen zone on the chosen date (DST-aware).
-  const offset = useMemo(() => resolveOffsetHours(form), [form]);
 
   // Picking a Country | TZ Location option sets the zone.
   function onCountryZoneChange(value: string) {
@@ -255,7 +255,6 @@ export default function BirthForm({ onSubmit, initial, style, onStyleChange }: P
               setForm((f) => ({ ...f, hour: h, minute: mi, second: s }));
             }}
           />
-          <span className="time-hint">{formatTime12(form.hour, form.minute)}</span>
         </div>
       </div>
 
@@ -293,7 +292,6 @@ export default function BirthForm({ onSubmit, initial, style, onStyleChange }: P
               </option>
             ))}
           </select>
-          <span className="tz-offset">{formatOffset(offset)}</span>
         </div>
       </div>
 
@@ -326,16 +324,21 @@ export default function BirthForm({ onSubmit, initial, style, onStyleChange }: P
 
       <div className="field">
         <label>Chart style</label>
-        <div className="style-choice">
+        <div className="style-choice" role="radiogroup">
           {STYLE_OPTIONS.map((s) => (
-            <button
+            <label
               key={s.id}
-              type="button"
-              className={style === s.id ? "style-choice-btn active" : "style-choice-btn"}
-              onClick={() => onStyleChange(s.id)}
+              className={style === s.id ? "style-choice-radio active" : "style-choice-radio"}
             >
+              <input
+                type="radio"
+                name="chart-style"
+                value={s.id}
+                checked={style === s.id}
+                onChange={() => onStyleChange(s.id)}
+              />
               {s.label}
-            </button>
+            </label>
           ))}
         </div>
       </div>
@@ -410,12 +413,15 @@ function formatOffset(hours: number): string {
   return `UTC${sign}${pad(h)}:${pad(m)}`;
 }
 
-function pad(n: number, width = 2): string {
-  return String(n).padStart(width, "0");
+/** Format a zone's current UTC offset for the dropdown, e.g. "UTC+05:30". */
+function zoneOffsetLabel(zone: string): string {
+  try {
+    return formatOffset(zoneOffsetHoursAt(zone, OFFSET_REF_INSTANT));
+  } catch {
+    return "UTC";
+  }
 }
 
-function formatTime12(hour: number, minute: number): string {
-  const period = hour < 12 ? "AM" : "PM";
-  const h12 = hour % 12 === 0 ? 12 : hour % 12;
-  return `${h12}:${pad(minute)} ${period}`;
+function pad(n: number, width = 2): string {
+  return String(n).padStart(width, "0");
 }

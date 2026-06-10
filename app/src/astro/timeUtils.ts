@@ -5,7 +5,7 @@ import type { BirthInput } from "./types";
  * UTC instant. Uses the browser's Intl engine, so DST and historical rule
  * changes are handled automatically. Positive = east of Greenwich.
  */
-function zoneOffsetHoursAt(timeZone: string, instant: Date): number {
+export function zoneOffsetHoursAt(timeZone: string, instant: Date): number {
   const dtf = new Intl.DateTimeFormat("en-US", {
     timeZone,
     hour12: false,

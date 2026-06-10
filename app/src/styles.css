@@ -435,31 +435,36 @@ body {
 }
 .style-choice {
   display: flex;
-  gap: 0.35rem;
+  gap: 1.1rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
-.style-choice-btn {
-  flex: 1 1 0;
-  min-width: 0;
-  font: inherit;
-  font-size: 0.85rem;
-  line-height: 1.2;
-  text-align: center;
-  background: var(--panel);
-  border: 1px solid var(--line);
+.style-choice .style-choice-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.9rem;
   color: var(--muted);
-  padding: 0.55rem 0.5rem;
-  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all var(--ease);
+  transition: color var(--ease);
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: nowrap;
+  overflow: visible;
 }
-.style-choice-btn:hover {
+.style-choice .style-choice-radio input {
+  width: auto;
+  margin: 0;
+  padding: 0;
+  flex: none;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.style-choice .style-choice-radio:hover {
   color: var(--text);
-  border-color: var(--accent-2);
 }
-.style-choice-btn.active {
-  background: linear-gradient(135deg, var(--accent), var(--accent-soft));
-  color: #2a1c08;
-  border-color: var(--accent);
+.style-choice .style-choice-radio.active {
+  color: var(--accent);
   font-weight: 600;
 }
 .nav-print {
@@ -495,27 +500,41 @@ body {
 .nav-form {
   padding-top: 0.5rem;
 }
-.nav-form-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  background: linear-gradient(180deg, #fbf8f1, #f3eee4);
-  border-right: 1px solid var(--line);
-  box-shadow: var(--shadow-lg);
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.doc-edit {
+  width: min(560px, 100%);
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(180deg, #fbf8f1, #f3eee4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
   animation: panel-in 0.22s var(--ease) both;
 }
-.nav-form-head {
+.doc-edit-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1rem 0.6rem;
+  padding: 1rem 1.25rem 0.75rem;
   border-bottom: 1px solid var(--line-soft);
 }
-.nav-form-head strong {
-  font-size: 1.05rem;
+.doc-edit-head strong {
+  font-size: 1.1rem;
   color: var(--accent);
+}
+.doc-edit-body {
+  padding: 1rem 1.25rem 1.25rem;
 }
 .nav-form-close {
   flex: none;
@@ -536,11 +555,6 @@ body {
 .nav-form-close:hover {
   background: var(--panel-2);
   color: var(--accent);
-}
-.nav-form-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0.9rem 1rem 1.2rem;
 }
 
 /* ---- Document ---- */
@@ -688,6 +702,9 @@ body {
     transition: transform 0.25s var(--ease);
     box-shadow: var(--shadow-lg);
     overflow-y: auto;
+    /* Opaque so the dimmed backdrop doesn't bleed through and wash out text. */
+    background: #fbf8f1;
+    backdrop-filter: none;
   }
   .app-nav.open {
     transform: translateX(0);
@@ -833,9 +850,9 @@ body.nav-locked {
 }
 .field-row {
   display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  align-items: stretch;
+  flex-direction: row;
+  gap: 0.75rem;
+  align-items: flex-start;
 }
 .field-row--top {
   align-items: stretch;
@@ -866,7 +883,36 @@ body.nav-locked {
 }
 .field-row input {
   padding-left: 0.4rem;
-  padding-right: 0.15rem;
+  padding-right: 0.3rem;
+}
+/* Keep the native date/time picker button visible and easy to click. */
+.field input[type="date"],
+.field input[type="time"] {
+  appearance: auto;
+  -webkit-appearance: auto;
+}
+.field input[type="date"]::-webkit-calendar-picker-indicator,
+.field input[type="time"]::-webkit-calendar-picker-indicator {
+  opacity: 1;
+  cursor: pointer;
+  padding: 0.15rem;
+  margin-left: 0.2rem;
+  border-radius: 4px;
+  filter: invert(48%) sepia(58%) saturate(540%) hue-rotate(2deg);
+  transition: background var(--ease);
+}
+.field input[type="date"]::-webkit-calendar-picker-indicator:hover,
+.field input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  background: rgba(196, 136, 30, 0.16);
+}
+/* Drop the up/down spinners so the clock/calendar picker icon always has room. */
+.field input[type="date"]::-webkit-inner-spin-button,
+.field input[type="date"]::-webkit-outer-spin-button,
+.field input[type="time"]::-webkit-inner-spin-button,
+.field input[type="time"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
 }
 .tz-offset {
   font-size: 0.78rem;
@@ -949,11 +995,7 @@ button.primary:active {
   border-radius: 2px;
 }
 .recents-panel {
-  background: linear-gradient(180deg, var(--panel), #f6f1e8);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 1rem;
-  box-shadow: var(--shadow);
+  padding: 0;
 }
 .recents-empty {
   margin: 0;

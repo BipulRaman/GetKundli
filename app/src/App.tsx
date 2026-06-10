@@ -441,10 +441,13 @@ export default function App() {
             Export HTML
           </button>
         </div>
+      </nav>
 
-        {showForm && (
-          <div className="nav-form-overlay">
-            <div className="nav-form-head">
+      {/* ---- Document (rendered entirely from the Liquid template) ---- */}
+      <main className="doc">
+        {showForm ? (
+          <div className="doc-edit">
+            <div className="doc-edit-head">
               <strong>Edit details</strong>
               <button
                 className="nav-form-close"
@@ -454,18 +457,17 @@ export default function App() {
                 ×
               </button>
             </div>
-            <div className="nav-form-body">
+            <div className="doc-edit-body">
               <BirthForm onSubmit={handleSubmit} initial={result.input} style={style} onStyleChange={setStyle} />
               {error && <p className="error">{error}</p>}
             </div>
           </div>
+        ) : (
+          <>
+            {tplError && <p className="error">Template error: {tplError}</p>}
+            <div className="doc-render" dangerouslySetInnerHTML={{ __html: html }} />
+          </>
         )}
-      </nav>
-
-      {/* ---- Document (rendered entirely from the Liquid template) ---- */}
-      <main className="doc">
-        {tplError && <p className="error">Template error: {tplError}</p>}
-        <div className="doc-render" dangerouslySetInnerHTML={{ __html: html }} />
       </main>
     </div>
   );
