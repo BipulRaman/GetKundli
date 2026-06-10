@@ -30,34 +30,6 @@ export const SIGN_SHORT = [
   "Pi",
 ] as const;
 
-/** Sanskrit / Vedic names for the signs (Rashis). */
-export const RASHIS = [
-  "Mesha",
-  "Vrishabha",
-  "Mithuna",
-  "Karka",
-  "Simha",
-  "Kanya",
-  "Tula",
-  "Vrischika",
-  "Dhanu",
-  "Makara",
-  "Kumbha",
-  "Meena",
-] as const;
-
-export const PLANETS: PlanetId[] = [
-  "Sun",
-  "Moon",
-  "Mars",
-  "Mercury",
-  "Jupiter",
-  "Venus",
-  "Saturn",
-  "Rahu",
-  "Ketu",
-];
-
 export const PLANET_SHORT: Record<PlanetId, string> = {
   Sun: "Su",
   Moon: "Mo",

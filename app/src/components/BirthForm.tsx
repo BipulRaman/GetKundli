@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { BirthInput } from "../astro/types";
 import { resolveOffsetHours } from "../astro/timeUtils";
 import { COUNTRIES, countryForZone } from "../data/timezones";
@@ -6,7 +6,17 @@ import { COUNTRIES, countryForZone } from "../data/timezones";
 interface Props {
   onSubmit: (input: BirthInput) => void;
   initial?: BirthInput;
+  style: ChartStyle;
+  onStyleChange: (style: ChartStyle) => void;
 }
+
+export type ChartStyle = "north" | "south" | "east";
+
+const STYLE_OPTIONS: { id: ChartStyle; label: string }[] = [
+  { id: "north", label: "North" },
+  { id: "south", label: "South" },
+  { id: "east", label: "East" },
+];
 
 /** localStorage key for saved kundli inputs. */
 const STORAGE_KEY = "kundli.recent";
@@ -95,7 +105,7 @@ const DEFAULT: BirthInput = {
   varshphalEndYear: new Date().getFullYear(),
 };
 
-export default function BirthForm({ onSubmit, initial }: Props) {
+export default function BirthForm({ onSubmit, initial, style, onStyleChange }: Props) {
   const [form, setForm] = useState<BirthInput>(initial ?? DEFAULT);
   const [czValue, setCzValue] = useState(() =>
     initial
@@ -103,8 +113,7 @@ export default function BirthForm({ onSubmit, initial }: Props) {
       : DEFAULT_CZ_VALUE,
   );
   const [recents, setRecents] = useState<BirthInput[]>(() => loadRecents());
-  const [recentsOpen, setRecentsOpen] = useState(false);
-  const recentsRef = useRef<HTMLDivElement | null>(null);
+  const [tab, setTab] = useState<"new" | "recent">("new");
 
   function update<K extends keyof BirthInput>(key: K, value: BirthInput[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -127,18 +136,6 @@ export default function BirthForm({ onSubmit, initial }: Props) {
       /* ignore storage errors */
     }
   }, [recents]);
-
-  // Close the recents dropdown on outside click.
-  useEffect(() => {
-    if (!recentsOpen) return;
-    function onDown(e: MouseEvent) {
-      if (recentsRef.current && !recentsRef.current.contains(e.target as Node)) {
-        setRecentsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [recentsOpen]);
 
   // Live UTC offset for the chosen zone on the chosen date (DST-aware).
   const offset = useMemo(() => resolveOffsetHours(form), [form]);
@@ -176,7 +173,6 @@ export default function BirthForm({ onSubmit, initial }: Props) {
   // Select a saved input: load it into the form and generate the kundli.
   function selectRecent(input: BirthInput) {
     loadRecent(input);
-    setRecentsOpen(false);
     onSubmit(input);
   }
 
@@ -186,9 +182,32 @@ export default function BirthForm({ onSubmit, initial }: Props) {
   }
 
   return (
-    <>
-    <form
-      className="birth-form"
+    <div className="form-shell">
+      <div className="form-tabs" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === "new"}
+          className={tab === "new" ? "form-tab active" : "form-tab"}
+          onClick={() => setTab("new")}
+        >
+          New Entry
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === "recent"}
+          className={tab === "recent" ? "form-tab active" : "form-tab"}
+          onClick={() => setTab("recent")}
+        >
+          Recent ({recents.length})
+        </button>
+      </div>
+
+      <div className="form-panels">
+      <form
+      className={tab === "new" ? "birth-form" : "birth-form panel-hidden"}
+      aria-hidden={tab !== "new"}
       onSubmit={(e) => {
         e.preventDefault();
         if (!form.name?.trim()) return;
@@ -236,6 +255,7 @@ export default function BirthForm({ onSubmit, initial }: Props) {
               setForm((f) => ({ ...f, hour: h, minute: mi, second: s }));
             }}
           />
+          <span className="time-hint">{formatTime12(form.hour, form.minute)}</span>
         </div>
       </div>
 
@@ -304,29 +324,37 @@ export default function BirthForm({ onSubmit, initial }: Props) {
         </div>
       </div>
 
+      <div className="field">
+        <label>Chart style</label>
+        <div className="style-choice">
+          {STYLE_OPTIONS.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              className={style === s.id ? "style-choice-btn active" : "style-choice-btn"}
+              onClick={() => onStyleChange(s.id)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <button type="submit" className="primary">
         Generate Kundli
       </button>
     </form>
 
-    {recents.length > 0 && (
-      <div className="recents" ref={recentsRef}>
-        <button
-          type="button"
-          className="recents-toggle"
-          onClick={() => setRecentsOpen((o) => !o)}
-          aria-expanded={recentsOpen}
-        >
-          <span>Recent Kundli ({recents.length})</span>
-          <span className={recentsOpen ? "recents-caret open" : "recents-caret"}>
-            ▾
-          </span>
-        </button>
-
-        {recentsOpen && (
-          <ul className="recents-menu">
+      <div
+        className={tab === "recent" ? "recents-panel" : "recents-panel panel-hidden"}
+        aria-hidden={tab !== "recent"}
+      >
+        {recents.length === 0 ? (
+          <p className="recents-empty">No saved kundli yet. Create one from the “New Entry” tab.</p>
+        ) : (
+          <ul className="recents-list">
             {recents.map((r, i) => (
-              <li key={`${r.name}-${i}`} className="recents-item">
+              <li key={r.id ?? `${r.name}-${i}`} className="recents-item">
                 <button
                   type="button"
                   className="recents-load"
@@ -369,8 +397,8 @@ export default function BirthForm({ onSubmit, initial }: Props) {
           </ul>
         )}
       </div>
-    )}
-    </>
+      </div>
+    </div>
   );
 }
 
@@ -384,4 +412,10 @@ function formatOffset(hours: number): string {
 
 function pad(n: number, width = 2): string {
   return String(n).padStart(width, "0");
+}
+
+function formatTime12(hour: number, minute: number): string {
+  const period = hour < 12 ? "AM" : "PM";
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${h12}:${pad(minute)} ${period}`;
 }

@@ -1,28 +1,5 @@
 import type { PlanetId } from "../astro/types";
 
-export interface City {
-  name: string;
-  lat: number;
-  lon: number;
-  tz: number;
-}
-
-/** A small set of preset locations for convenience. */
-export const CITIES: City[] = [
-  { name: "New Delhi, India", lat: 28.6139, lon: 77.209, tz: 5.5 },
-  { name: "Mumbai, India", lat: 19.076, lon: 72.8777, tz: 5.5 },
-  { name: "Bengaluru, India", lat: 12.9716, lon: 77.5946, tz: 5.5 },
-  { name: "Kolkata, India", lat: 22.5726, lon: 88.3639, tz: 5.5 },
-  { name: "Chennai, India", lat: 13.0827, lon: 80.2707, tz: 5.5 },
-  { name: "Hyderabad, India", lat: 17.385, lon: 78.4867, tz: 5.5 },
-  { name: "Kathmandu, Nepal", lat: 27.7172, lon: 85.324, tz: 5.75 },
-  { name: "London, UK", lat: 51.5074, lon: -0.1278, tz: 0 },
-  { name: "New York, USA", lat: 40.7128, lon: -74.006, tz: -5 },
-  { name: "Dubai, UAE", lat: 25.2048, lon: 55.2708, tz: 4 },
-  { name: "Singapore", lat: 1.3521, lon: 103.8198, tz: 8 },
-  { name: "Sydney, Australia", lat: -33.8688, lon: 151.2093, tz: 11 },
-];
-
 export const PLANET_SIGNIFICATIONS: Record<PlanetId, string> = {
   Sun: "Soul, ego, vitality, father, authority and leadership.",
   Moon: "Mind, emotions, mother, comfort and the public.",

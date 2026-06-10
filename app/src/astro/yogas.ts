@@ -64,8 +64,9 @@ export function detectYogas(
     });
   }
 
-  // Budha-Aditya: Sun and Mercury in the same sign.
-  if (planets.Sun.sign === planets.Mercury.sign && !planets.Mercury.retrograde) {
+  // Budha-Aditya: Sun and Mercury in the same sign (conjunction). Retrograde
+  // motion does not negate the yoga in classical texts.
+  if (planets.Sun.sign === planets.Mercury.sign) {
     yogas.push({
       name: "Budha-Aditya Yoga",
       description:
@@ -97,7 +98,8 @@ export function detectYogas(
     "Saturn strong in a kendra — authority, discipline, endurance and influence.");
   for (const y of [ruchaka, bhadra, hamsa, malavya, sasa]) if (y) yogas.push(y);
 
-  // Kemadruma: no planet (except Sun) in the 2nd/12th from the Moon nor with it.
+  // Kemadruma: no planet (except Sun/nodes) in the 2nd/12th from the Moon nor
+  // with it. Subject to the standard cancellations (bhanga) below.
   const moonHouse = houseOfPlanet("Moon");
   const adjacent = new Set([
     ((moonHouse - 2 + 12) % 12) + 1,
@@ -112,11 +114,23 @@ export function detectYogas(
       p.id !== "Ketu" &&
       adjacent.has(p.house),
   );
-  if (!hasNeighbour) {
+  // Kemadruma bhanga (cancellation): nullified if the Moon itself is in a kendra
+  // from the Lagna, or any planet (other than Sun/nodes) occupies a kendra
+  // (4th/7th/10th) from the Moon.
+  const moonInKendra = KENDRAS.includes(moonHouse);
+  const planetInKendraFromMoon = planetList.some(
+    (p) =>
+      p.id !== "Moon" &&
+      p.id !== "Sun" &&
+      p.id !== "Rahu" &&
+      p.id !== "Ketu" &&
+      [4, 7, 10].includes(relHouse(moonHouse, p.house)),
+  );
+  if (!hasNeighbour && !moonInKendra && !planetInKendraFromMoon) {
     yogas.push({
       name: "Kemadruma Yoga",
       description:
-        "Moon isolated (no planets in the 2nd/12th from it) — can bring struggle; mitigated by aspects and dignified Moon.",
+        "Moon isolated (no planets in the 2nd/12th from it, and none in a kendra from it) — can bring struggle; mitigated by aspects and a dignified Moon.",
       strength: "Present",
     });
   }

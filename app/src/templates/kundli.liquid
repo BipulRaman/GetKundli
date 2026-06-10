@@ -1,0 +1,488 @@
+{%- comment -%}
+  Full kundli document template (LiquidJS).
+  Data shape: see KundliJson in src/astro/kundliJson.ts. This template is fully
+  self-contained: all presentation (including the embedded <style> block below)
+  lives here, so the same template + a KundliJson object renders an identical
+  document anywhere — no external stylesheet required. All astrology logic and
+  chart SVGs are pre-computed in the JSON, keeping this file pure presentation.
+  Section ids (overview, planets, shadbala, charts, dashas, ashtaka, yogas,
+  varshphal, interpretation) match the sidebar navigation anchors.
+{%- endcomment -%}
+<div class="kundli-doc">
+  <style>
+    .kundli-doc {
+      --ink: #1d1a16;
+      --muted: #6f665a;
+      --faint: #9a9183;
+      --accent: #8a2d3b;
+      --gold: #b08436;
+      --hair: #e4ddcf;
+      --tint: #faf7f1;
+      --head: #f4eee3;
+      color: var(--ink);
+      font-family: Calibri, "Segoe UI", Candara, "Trebuchet MS", sans-serif;
+      font-size: 13.5px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    .kundli-doc * { box-sizing: border-box; }
+    .kundli-doc section { margin: 0 0 2rem; }
+
+    /* Headings */
+    .kundli-doc h1 { font-size: 2rem; font-weight: 600; letter-spacing: 0.01em; margin: 0; }
+    .kundli-doc h2 {
+      position: relative;
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      margin: 0 0 0.95rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid var(--hair);
+    }
+    .kundli-doc h2::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -1px;
+      width: 2.4rem;
+      height: 2px;
+      background: var(--gold);
+    }
+    .kundli-doc h3 { font-size: 1rem; font-weight: 700; margin: 1rem 0 0.3rem; }
+    .kundli-doc h4 {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      margin: 0.9rem 0 0.3rem;
+    }
+    .kundli-doc p { margin: 0.4rem 0; }
+
+    /* Masthead */
+    .kp-head { margin-bottom: 1.6rem; padding-bottom: 1rem; border-bottom: 2px solid var(--accent); }
+    .kp-eyebrow {
+      margin: 0 0 0.4rem;
+      font-size: 0.66rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      color: var(--gold);
+    }
+    .kp-sub { margin: 0.25rem 0; color: var(--muted); }
+    .kp-meta { margin: 0.2rem 0; color: var(--faint); font-size: 0.78rem; letter-spacing: 0.02em; }
+    .kp-asc { margin: 0.6rem 0 0; font-size: 0.95rem; }
+    .kp-asc strong { color: var(--accent); }
+    .kp-disclaimer { color: var(--muted); font-size: 0.8rem; font-style: italic; }
+
+    /* Charts */
+    .kp-charts { display: flex; flex-wrap: wrap; gap: 1.75rem; }
+    .kp-charts .kp-chart { flex: 1 1 300px; max-width: 420px; }
+    .kp-chart { margin: 0; }
+    .kp-chart figcaption {
+      margin-bottom: 0.5rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      text-align: center;
+    }
+    .kp-varga-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem 1.1rem;
+    }
+    .kp-varga-desc { margin: 0.35rem 0 0; font-size: 0.72rem; color: var(--muted); text-align: center; }
+
+    /* SVG chart internals (classes emitted by chartSvg.ts) */
+    .kundli-doc .chart-svg { width: 100%; max-width: 420px; height: auto; display: block; margin: 0 auto; }
+    .kundli-doc .chart-frame { fill: #fff; stroke: var(--accent); stroke-width: 1.5; }
+    .kundli-doc .chart-line { stroke: #cabda3; stroke-width: 1; fill: none; }
+    .kundli-doc .grid-cell { fill: #fff; stroke: #cabda3; stroke-width: 1; }
+    .kundli-doc .grid-cell.lagna { fill: rgba(138, 45, 59, 0.06); }
+    .kundli-doc .lagna-mark { stroke: var(--accent); stroke-width: 2; }
+    .kundli-doc .house-sign {
+      fill: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      text-anchor: middle;
+      font-family: Calibri, "Segoe UI", sans-serif;
+    }
+    .kundli-doc .house-sign.small { font-size: 11px; text-anchor: start; }
+    .kundli-doc .house-sign.east-compact { font-size: 10px; text-anchor: middle; }
+    .kundli-doc .planet {
+      fill: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      text-anchor: middle;
+      font-family: Calibri, "Segoe UI", sans-serif;
+    }
+    .kundli-doc .planet.east-compact { font-size: 11px; }
+    .kundli-doc .planet.retro { fill: var(--accent); font-style: italic; }
+    .kundli-doc .planet-deg { font-size: 8px; font-weight: 400; fill: var(--muted); }
+
+    /* Tables */
+    .kp-scroll { overflow-x: auto; }
+    .kp-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .kp-table thead th {
+      background: var(--head);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-align: left;
+      padding: 0.5rem 0.6rem;
+      border-bottom: 1.5px solid var(--accent);
+    }
+    .kp-table td { padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--hair); }
+    .kp-table tbody tr:nth-child(even) td { background: var(--tint); }
+    .kp-table .kp-active td { background: rgba(138, 45, 59, 0.09); font-weight: 700; }
+    .kp-av thead th, .kp-av td { text-align: center; padding: 0.35rem 0.4rem; }
+    .kp-av thead th:first-child, .kp-av thead th:nth-child(2),
+    .kp-av td:first-child, .kp-av td:nth-child(2) { text-align: left; }
+    .kp-asc-row td { background: rgba(138, 45, 59, 0.09); font-weight: 700; }
+    .kp-maha td { background: var(--head); font-weight: 700; }
+    .kp-antar .kp-tree { padding-left: 1.5rem; position: relative; color: var(--muted); }
+    .kp-antar .kp-tree::before { content: "\2514"; position: absolute; left: 0.6rem; color: var(--faint); }
+
+    /* Lists */
+    .kp-list { list-style: none; padding: 0; margin: 0.5rem 0; max-width: 430px; }
+    .kp-list li {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.6rem;
+      padding: 0.32rem 0;
+      border-bottom: 1px dotted var(--hair);
+    }
+    .kp-list li span { color: var(--muted); }
+    .kp-list li strong { text-align: right; }
+    .kp-bullets { margin: 0.4rem 0; padding-left: 1.1rem; font-size: 0.85rem; }
+    .kp-bullets li { margin-bottom: 0.5rem; }
+    .kp-bullets li strong { color: var(--accent); }
+    .kp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.75rem; }
+    .kp-current { margin: 0 0 0.6rem; font-weight: 600; color: var(--accent); }
+    .kp-varsha { padding-top: 1.1rem; margin-top: 1.1rem; border-top: 1px solid var(--hair); }
+    .kp-good { color: #2f7a47; font-weight: 700; }
+    .kp-bad { color: var(--accent); font-weight: 700; }
+
+    /* Footer & page marks */
+    .kp-foot {
+      margin-top: 1.5rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--hair);
+      color: var(--faint);
+      font-size: 0.72rem;
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+    .doc-page-no {
+      display: block;
+      margin-top: 0.8rem;
+      text-align: right;
+      color: var(--faint);
+      font-size: 0.66rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 720px) {
+      .kp-cols { grid-template-columns: 1fr; }
+      .kp-varga-grid { grid-template-columns: 1fr; }
+    }
+
+    /* Print always uses the full desktop layout regardless of viewport width. */
+    @media print {
+      .kp-cols { grid-template-columns: 1fr 1fr; }
+      .kp-varga-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+
+  <section id="overview" class="doc-page">
+    <header class="kp-head">
+      <p class="kp-eyebrow">Vedic Birth Chart · Janma Kundli</p>
+      <h1>{{ meta.name }}</h1>
+      <p class="kp-sub">{{ meta.date }} · {{ meta.time }} · {{ meta.place }}</p>
+      <p class="kp-meta">
+        Lat {{ meta.latitude }}, Lon {{ meta.longitude }} · {{ meta.timeZone }}
+        · Ayanamsa {{ meta.ayanamsa }}
+      </p>
+      <p class="kp-asc">
+        <strong>Lagna:</strong> {{ ascendant.sign }} {{ ascendant.degree }}
+        · {{ ascendant.nakshatra }} (pada {{ ascendant.pada }})
+      </p>
+    </header>
+
+    <div class="kp-charts">
+      <figure class="kp-chart">
+        <figcaption>{{ overview.rashi.title }}</figcaption>
+        {{ overview.rashi.svg }}
+      </figure>
+      <figure class="kp-chart">
+        <figcaption>{{ overview.navamsa.title }}</figcaption>
+        {{ overview.navamsa.svg }}
+      </figure>
+    </div>
+
+    <h2>Panchang (Five Limbs)</h2>
+    <ul class="kp-list kp-panchang">
+      <li><span>Vara</span><strong>{{ panchang.vara }}</strong></li>
+      <li><span>Tithi</span><strong>{{ panchang.paksha }} {{ panchang.tithi }}</strong></li>
+      <li><span>Nakshatra</span><strong>{{ panchang.nakshatra }}</strong></li>
+      <li><span>Yoga</span><strong>{{ panchang.yoga }}</strong></li>
+      <li><span>Karana</span><strong>{{ panchang.karana }}</strong></li>
+      <li><span>Sunrise</span><strong>{{ panchang.sunrise }}</strong></li>
+      <li><span>Sunset</span><strong>{{ panchang.sunset }}</strong></li>
+      <li><span>Lunar phase</span><strong>{{ panchang.moonPhase }}</strong></li>
+    </ul>
+    <span class="doc-page-no">Page 1</span>
+  </section>
+
+  <section id="planets" class="doc-page">
+    <h2>Planetary Positions</h2>
+    <div class="kp-scroll">
+      <table class="kp-table">
+        <thead>
+          <tr>
+            <th>Planet</th><th>Sign</th><th>Degree</th><th>House</th>
+            <th>Nakshatra</th><th>Pada</th><th>Sign Lord</th><th>Nak. Lord</th>
+            <th>Dignity</th><th>State</th>
+          </tr>
+        </thead>
+        <tbody>
+          {%- for p in planets -%}
+            <tr>
+              <td>{{ p.glyph }} {{ p.id }}</td>
+              <td>{{ p.sign }}</td>
+              <td>{{ p.degree }}</td>
+              <td>{{ p.house }}</td>
+              <td>{{ p.nakshatra }}</td>
+              <td>{{ p.pada }}</td>
+              <td>{{ p.signLord }}</td>
+              <td>{{ p.nakLord }}</td>
+              <td>{{ p.dignity }}</td>
+              <td>{{ p.state }}</td>
+            </tr>
+          {%- endfor -%}
+        </tbody>
+      </table>
+    </div>
+    <span class="doc-page-no">Page 2</span>
+  </section>
+
+  <section id="shadbala" class="doc-page">
+    <h2>Shadbala — Six-fold Strength (Rupas)</h2>
+    <p class="kp-sub">Strongest → weakest: {{ shadbala.order }}</p>
+    <div class="kp-scroll">
+      <table class="kp-table">
+        <thead>
+          <tr>
+            <th>Rank</th><th>Planet</th>
+            {%- for c in shadbala.components -%}<th>{{ c.label }}</th>{%- endfor -%}
+            <th>Total</th><th>Required</th><th>Ratio</th><th>Strength</th>
+          </tr>
+        </thead>
+        <tbody>
+          {%- for r in shadbala.rows -%}
+            <tr>
+              <td>{{ r.rank }}</td>
+              <td>{{ r.glyph }} {{ r.id }}</td>
+              <td>{{ r.sthana }}</td>
+              <td>{{ r.dig }}</td>
+              <td>{{ r.kala }}</td>
+              <td>{{ r.cheshta }}</td>
+              <td>{{ r.naisargika }}</td>
+              <td>{{ r.drik }}</td>
+              <td><strong>{{ r.total }}</strong></td>
+              <td>{{ r.required }}</td>
+              <td>{{ r.ratio }}</td>
+              <td>{% if r.strong %}<span class="kp-good">Strong</span>{% else %}<span class="kp-bad">Weak</span>{% endif %}</td>
+            </tr>
+          {%- endfor -%}
+        </tbody>
+      </table>
+    </div>
+    <span class="doc-page-no">Page 3</span>
+  </section>
+
+  <section id="charts" class="doc-page">
+    <h2>Divisional Charts (Shodashavarga)</h2>
+    <p class="kp-sub">Sixteen vargas refine each life area beyond the Rashi chart.</p>
+    <div class="kp-varga-grid">
+      {%- for v in vargas -%}
+        <figure class="kp-chart" id="{{ v.anchor }}">
+          <figcaption>{{ v.title }}</figcaption>
+          {{ v.svg }}
+          <p class="kp-varga-desc">{{ v.description }}</p>
+        </figure>
+      {%- endfor -%}
+    </div>
+    <span class="doc-page-no">Page 4</span>
+  </section>
+
+  <section id="dashas" class="doc-page">
+    <h2>Vimshottari Dasha</h2>
+    <p class="kp-current">Running: {{ dasha.current }}</p>
+    <div class="kp-scroll">
+      <table class="kp-table">
+        <thead><tr><th>Period</th><th>Start</th><th>End</th></tr></thead>
+        <tbody>
+          {%- for d in dasha.periods -%}
+            <tr id="{{ d.anchor }}" class="kp-maha{% if d.active %} kp-active{% endif %}">
+              <td>{{ d.glyph }} {{ d.lord }} Mahadasha</td>
+              <td>{{ d.start }}</td>
+              <td>{{ d.end }}</td>
+            </tr>
+            {%- for a in d.antars -%}
+              <tr class="kp-antar{% if a.active %} kp-active{% endif %}">
+                <td class="kp-tree">{{ a.lord }}</td>
+                <td>{{ a.start }}</td>
+                <td>{{ a.end }}</td>
+              </tr>
+            {%- endfor -%}
+          {%- endfor -%}
+        </tbody>
+      </table>
+    </div>
+    <span class="doc-page-no">Page 5</span>
+  </section>
+
+  <section id="ashtaka" class="doc-page">
+    <h2>Ashtakavarga</h2>
+    <p class="kp-sub">
+      Benefic bindus per sign. Higher Sarvashtakavarga (SAV) totals give better
+      results for transits and dashas. Total = {{ ashtakavarga.total }} (classical 337).
+    </p>
+    <div class="kp-scroll">
+      <table class="kp-table kp-av">
+        <thead>
+          <tr>
+            <th>Sign</th><th>House</th>
+            {%- for h in ashtakavarga.heads -%}<th>{{ h }}</th>{%- endfor -%}
+            <th>SAV</th>
+          </tr>
+        </thead>
+        <tbody>
+          {%- for r in ashtakavarga.rows -%}
+            <tr class="{% if r.isAsc %}kp-asc-row{% endif %}">
+              <td>{{ r.signShort }} {{ r.sign }}</td>
+              <td>{{ r.house }}</td>
+              {%- for v in r.bav -%}<td>{{ v }}</td>{%- endfor -%}
+              <td class="{% if r.strong %}kp-good{% elsif r.weak %}kp-bad{% endif %}"><strong>{{ r.sav }}</strong></td>
+            </tr>
+          {%- endfor -%}
+        </tbody>
+      </table>
+    </div>
+    <span class="doc-page-no">Page 6</span>
+  </section>
+
+  <section id="yogas" class="doc-page">
+    <h2>Yogas &amp; Doshas</h2>
+    <div class="kp-cols">
+      <div>
+        <h3>Yogas</h3>
+        {%- if yogas.size == 0 -%}
+          <p class="kp-sub">No notable yogas detected.</p>
+        {%- else -%}
+          <ul class="kp-bullets">
+            {%- for y in yogas -%}
+              <li><strong>{{ y.name }}</strong> — {{ y.description }}</li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+      </div>
+      <div>
+        <h3>Doshas</h3>
+        <ul class="kp-bullets">
+          {%- for d in doshas -%}
+            <li>
+              <strong>{{ d.name }}</strong> —
+              {% if d.present %}<span class="kp-bad">Present</span>{% else %}<span class="kp-good">Absent</span>{% endif %}
+              <br />{{ d.detail }}
+            </li>
+          {%- endfor -%}
+        </ul>
+      </div>
+    </div>
+    <span class="doc-page-no">Page 7</span>
+  </section>
+
+  <section id="varshphal" class="doc-page">
+    <h2>Varshphal (Annual Horoscope · Tajika)</h2>
+    <p class="kp-sub">
+      Solar-return charts cast when the Sun returns to its natal position, for
+      each year in the chosen range ({{ varshphal.range }}).
+    </p>
+    {%- for y in varshphal.years -%}
+      <div class="kp-varsha" id="{{ y.anchor }}">
+        <h3>{{ y.year }} · Age {{ y.age }}</h3>
+        <p class="kp-sub"><strong>Varsha Pravesh:</strong> {{ y.pravesh }}</p>
+        <ul class="kp-list kp-varsha-key">
+          <li><span>Varsha Lagna</span><strong>{{ y.lagna }}</strong></li>
+          <li><span>Muntha</span><strong>{{ y.muntha }}</strong></li>
+          <li><span>Year Lord</span><strong>{{ y.yearLord }}</strong></li>
+        </ul>
+        <figure class="kp-chart">
+          <figcaption>{{ y.chart.title }}</figcaption>
+          {{ y.chart.svg }}
+        </figure>
+        <h4>Mudda Dasha (annual)</h4>
+        <div class="kp-scroll">
+          <table class="kp-table">
+            <thead><tr><th>Lord</th><th>Start</th><th>End</th></tr></thead>
+            <tbody>
+              {%- for d in y.mudda -%}
+                <tr><td>{{ d.glyph }} {{ d.lord }}</td><td>{{ d.start }}</td><td>{{ d.end }}</td></tr>
+              {%- endfor -%}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {%- endfor -%}
+    <span class="doc-page-no">Page 8</span>
+  </section>
+
+  <section id="interpretation" class="doc-page">
+    <h2>Basic Interpretation</h2>
+    <p class="kp-disclaimer">
+      Generic, classical significations for guidance and learning — not
+      personalized predictions.
+    </p>
+    <h3>Lagna (Ascendant): {{ interpretation.lagnaSign }}</h3>
+    <p>{{ interpretation.lagnaText }} This colours your overall temperament, body and approach to life.</p>
+
+    <h3>Moon sign (Rashi): {{ interpretation.moonSign }}</h3>
+    <p>
+      Your mind and emotions follow a {{ interpretation.moonSign }} nature — {{ interpretation.moonText }}
+      Birth star (Nakshatra): <strong>{{ interpretation.moonNak }}</strong>, pada {{ interpretation.moonPada }}.
+    </p>
+
+    <h3>Sun sign: {{ interpretation.sunSign }}</h3>
+    <p>{{ interpretation.sunText }} The Sun shows your core identity and vitality.</p>
+
+    <h3>Planets by house</h3>
+    <ul class="kp-bullets">
+      {%- for p in interpretation.planets -%}
+        <li><strong>{{ p.id }}</strong> in house {{ p.house }} ({{ p.sign }}): {{ p.signification }} Here it influences {{ p.houseMeaning }}</li>
+      {%- endfor -%}
+    </ul>
+
+    {%- if interpretation.current -%}
+      <h3>Current period</h3>
+      <p>
+        You are in the <strong>{{ interpretation.current.maha }}</strong> Mahadasha.
+        {{ interpretation.current.mahaText }} The active sub-period
+        (<strong>{{ interpretation.current.antar }}</strong> Antardasha) adds the flavour of
+        {{ interpretation.current.antarText }}
+      </p>
+    {%- endif -%}
+    <span class="doc-page-no">Page 9</span>
+  </section>
+
+  <footer class="kp-foot">Generated {{ meta.generatedAt }} · Style: {{ meta.style }}</footer>
+</div>

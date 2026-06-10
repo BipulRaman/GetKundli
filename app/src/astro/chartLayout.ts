@@ -1,5 +1,5 @@
-import type { KundliResult, PlanetId } from "../astro/types";
-import { vargaSign, vargaDegree } from "../astro/vargas";
+import type { KundliResult, PlanetId } from "./types";
+import { vargaSign, vargaDegree } from "./vargas";
 
 export interface CellPlanet {
   id: PlanetId;
