@@ -12,6 +12,8 @@ export type PlanetId =
   | "Ketu";
 
 export interface BirthInput {
+  /** Stable identifier used to track saved entries in localStorage. */
+  id?: string;
   /** Local calendar date/time as entered by the user. */
   year: number;
   month: number; // 1-12
@@ -31,6 +33,10 @@ export interface BirthInput {
   tzOffsetHours: number;
   name?: string;
   place?: string;
+  /** Start calendar year for the Varshphal (annual) charts. */
+  varshphalStartYear?: number;
+  /** End calendar year for the Varshphal (annual) charts. */
+  varshphalEndYear?: number;
 }
 
 export interface PlanetPosition {

@@ -1,4 +1,4 @@
-import { Fragment, useState } from "react";
+import { Fragment } from "react";
 import type { DashaPeriod, KundliResult } from "../astro/types";
 import { PLANET_GLYPH } from "../astro/constants";
 
@@ -14,9 +14,11 @@ function fmt(d: Date): string {
   });
 }
 
+export function dashaAnchorId(maha: DashaPeriod): string {
+  return `dasha-${maha.lord}-${maha.start.getTime()}`;
+}
+
 export default function DashaTable({ result }: Props) {
-  const [openMaha, setOpenMaha] = useState<string | null>(null);
-  const [openAntar, setOpenAntar] = useState<string | null>(null);
   const current = result.currentDasha;
 
   return (
@@ -40,81 +42,46 @@ export default function DashaTable({ result }: Props) {
             <th>Period</th>
             <th>Start</th>
             <th>End</th>
-            <th></th>
           </tr>
         </thead>
         <tbody>
           {result.dashas.map((maha: DashaPeriod) => {
-            const mahaKey = `${maha.lord}-${maha.start.getTime()}`;
             const active = current?.maha === maha.lord;
-            const mahaOpen = openMaha === mahaKey;
             return (
-              <Fragment key={mahaKey}>
+              <Fragment key={dashaAnchorId(maha)}>
                 <tr
+                  id={dashaAnchorId(maha)}
                   className={`maha-row${active ? " active" : ""}`}
-                  onClick={() => setOpenMaha(mahaOpen ? null : mahaKey)}
                 >
                   <td>
                     <span className="glyph">{PLANET_GLYPH[maha.lord]}</span>{" "}
-                    {maha.lord}
+                    {maha.lord} Mahadasha
                   </td>
                   <td>{fmt(maha.start)}</td>
                   <td>{fmt(maha.end)}</td>
-                  <td className="expand">{mahaOpen ? "▾" : "▸"}</td>
                 </tr>
-                {mahaOpen &&
-                  maha.children?.map((antar) => {
-                    const antarKey = `${mahaKey}-${antar.lord}-${antar.start.getTime()}`;
-                    const antarActive =
-                      active && current?.antar === antar.lord;
-                    const antarOpen = openAntar === antarKey;
-                    return (
-                      <Fragment key={antarKey}>
-                        <tr
-                          className={`antar-row${antarActive ? " active" : ""}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenAntar(antarOpen ? null : antarKey);
-                          }}
-                        >
-                          <td className="indent">↳ {antar.lord}</td>
-                          <td>{fmt(antar.start)}</td>
-                          <td>{fmt(antar.end)}</td>
-                          <td className="expand">
-                            {antar.children?.length
-                              ? antarOpen
-                                ? "▾"
-                                : "▸"
-                              : ""}
-                          </td>
-                        </tr>
-                        {antarOpen &&
-                          antar.children?.map((prat) => (
-                            <tr
-                              key={`${antarKey}-${prat.lord}-${prat.start.getTime()}`}
-                              className={`prat-row${
-                                antarActive && current?.pratyantar === prat.lord
-                                  ? " active"
-                                  : ""
-                              }`}
-                            >
-                              <td className="indent2">↳↳ {prat.lord}</td>
-                              <td>{fmt(prat.start)}</td>
-                              <td>{fmt(prat.end)}</td>
-                              <td></td>
-                            </tr>
-                          ))}
-                      </Fragment>
-                    );
-                  })}
+                {maha.children?.map((antar, ai) => {
+                  const antarActive = active && current?.antar === antar.lord;
+                  const isLast = ai === (maha.children?.length ?? 0) - 1;
+                  return (
+                    <tr
+                      key={`${antar.lord}-${antar.start.getTime()}`}
+                      className={`antar-row${antarActive ? " active" : ""}`}
+                    >
+                      <td className="tree-cell">
+                        <span className={`tree-branch${isLast ? " last" : ""}`} />
+                        {antar.lord}
+                      </td>
+                      <td>{fmt(antar.start)}</td>
+                      <td>{fmt(antar.end)}</td>
+                    </tr>
+                  );
+                })}
               </Fragment>
             );
           })}
         </tbody>
       </table>
-      <p className="muted">
-        Tap a Mahadasha to see Antardashas, then an Antardasha for Pratyantardashas.
-      </p>
     </div>
   );
 }

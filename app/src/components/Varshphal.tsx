@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import type { DetailedKundli } from "../astro/kundli";
 import { computeVarshphal } from "../astro/varshphal";
 import type { VarshphalChart } from "../astro/varshphal";
@@ -39,18 +39,22 @@ function fmtDate(d: Date): string {
   });
 }
 
-export default function Varshphal({ result, style }: Props) {
+export function varshphalAnchorId(year: number): string {
+  return `varsha-${year}`;
+}
+
+function VarshphalYear({
+  result,
+  style,
+  year,
+}: {
+  result: DetailedKundli;
+  style: Style;
+  year: number;
+}) {
   const birthUtc = result.utcDate;
   const moonLon = result.planets.find((p) => p.id === "Moon")!.longitude;
-
   const birthYear = birthUtc.getUTCFullYear();
-  const currentAge = useMemo(() => {
-    const ms = Date.now() - birthUtc.getTime();
-    return Math.max(0, Math.floor(ms / (365.25 * 24 * 3600 * 1000)));
-  }, [birthUtc]);
-  const currentYear = birthYear + currentAge;
-
-  const [year, setYear] = useState(currentYear);
   const age = year - birthYear;
 
   const chart = useMemo(
@@ -70,41 +74,20 @@ export default function Varshphal({ result, style }: Props) {
   const cells = buildCells(chart);
   const title = `Varsha Pravesh · ${year} (Age ${age})`;
 
-  function renderChart() {
-    if (style === "north") return <NorthIndianChart cells={cells} title={title} />;
-    if (style === "south") return <SouthIndianChart cells={cells} title={title} />;
-    return <EastIndianChart cells={cells} title={title} />;
-  }
+  const renderChart =
+    style === "north" ? (
+      <NorthIndianChart cells={cells} title={title} />
+    ) : style === "south" ? (
+      <SouthIndianChart cells={cells} title={title} />
+    ) : (
+      <EastIndianChart cells={cells} title={title} />
+    );
 
   return (
-    <div className="panel">
-      <h3>Varshphal (Annual Horoscope · Tajika)</h3>
-      <p className="muted">
-        The solar-return chart cast when the Sun returns to its natal position for
-        the chosen year.
-      </p>
-
-      <div className="varsha-controls">
-        <button onClick={() => setYear((y) => Math.max(birthYear, y - 1))}>−</button>
-        <label>
-          Year
-          <input
-            type="number"
-            min={birthYear}
-            max={birthYear + 120}
-            value={year}
-            onChange={(e) =>
-              setYear(
-                Math.max(birthYear, Number(e.target.value) || birthYear),
-              )
-            }
-          />
-        </label>
-        <button onClick={() => setYear((y) => y + 1)}>+</button>
-        <button className="link" onClick={() => setYear(currentYear)}>
-          Current year ({currentYear})
-        </button>
-      </div>
+    <div className="varsha-year" id={varshphalAnchorId(year)}>
+      <h4 className="varsha-year-title">
+        {year} · Age {age}
+      </h4>
 
       <p className="varsha-pravesh">
         <strong>Varsha Pravesh:</strong> {fmtDate(chart.pravesh)} (UTC)
@@ -127,9 +110,9 @@ export default function Varshphal({ result, style }: Props) {
         </div>
       </div>
 
-      <div className="single-chart">{renderChart()}</div>
+      <div className="single-chart">{renderChart}</div>
 
-      <h4>Mudda Dasha (annual)</h4>
+      <h5 className="varsha-mudda-title">Mudda Dasha (annual)</h5>
       <div className="table-scroll">
         <table className="data-table">
           <thead>
@@ -152,6 +135,40 @@ export default function Varshphal({ result, style }: Props) {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+export function varshphalYears(result: DetailedKundli): number[] {
+  const birthYear = result.utcDate.getUTCFullYear();
+  const thisYear = new Date().getFullYear();
+  const start = Math.max(
+    birthYear,
+    result.input.varshphalStartYear ?? thisYear,
+  );
+  const end = Math.max(start, result.input.varshphalEndYear ?? start);
+  const capped = Math.min(end, start + 49); // safety cap of 50 years
+  const years: number[] = [];
+  for (let y = start; y <= capped; y++) years.push(y);
+  return years;
+}
+
+export default function Varshphal({ result, style }: Props) {
+  const years = varshphalYears(result);
+
+  return (
+    <div className="panel">
+      <h3>Varshphal (Annual Horoscope · Tajika)</h3>
+      <p className="muted">
+        Solar-return charts cast when the Sun returns to its natal position, for
+        each year in the chosen range ({years[0]}–{years[years.length - 1]}).
+        Change the range in the birth details form.
+      </p>
+
+      {years.map((y) => (
+        <VarshphalYear key={y} result={result} style={style} year={y} />
+      ))}
+
       <p className="disclaimer">
         Muntha advances one sign per year from the natal Lagna. The year lord and
         Mudda dasha are simplified Tajika indicators for guidance.

@@ -1,22 +1,47 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { BirthInput } from "../astro/types";
 import { resolveOffsetHours } from "../astro/timeUtils";
 import { COUNTRIES, countryForZone } from "../data/timezones";
 
 interface Props {
   onSubmit: (input: BirthInput) => void;
+  initial?: BirthInput;
 }
 
 /** localStorage key for saved kundli inputs. */
 const STORAGE_KEY = "kundli.recent";
 
-/** Load saved inputs from localStorage. */
+/** Generate a stable unique id for a saved entry. */
+function newId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `k_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/** Load saved inputs from localStorage, ensuring every entry has an id. */
 function loadRecents(): BirthInput[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    let changed = false;
+    const migrated = parsed.map((r: BirthInput) => {
+      if (r && !r.id) {
+        changed = true;
+        return { ...r, id: newId() };
+      }
+      return r;
+    });
+    if (changed) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+      } catch {
+        /* ignore storage errors */
+      }
+    }
+    return migrated;
   } catch {
     return [];
   }
@@ -66,16 +91,33 @@ const DEFAULT: BirthInput = {
   longitude: 77.209,
   timeZone: DEFAULT_TZ,
   tzOffsetHours: 5.5,
+  varshphalStartYear: new Date().getFullYear(),
+  varshphalEndYear: new Date().getFullYear(),
 };
 
-export default function BirthForm({ onSubmit }: Props) {
-  const [form, setForm] = useState<BirthInput>(DEFAULT);
-  const [czValue, setCzValue] = useState(DEFAULT_CZ_VALUE);
+export default function BirthForm({ onSubmit, initial }: Props) {
+  const [form, setForm] = useState<BirthInput>(initial ?? DEFAULT);
+  const [czValue, setCzValue] = useState(() =>
+    initial
+      ? `${countryForZone(initial.timeZone ?? "")?.code ?? DEFAULT_COUNTRY}|${initial.timeZone}`
+      : DEFAULT_CZ_VALUE,
+  );
   const [recents, setRecents] = useState<BirthInput[]>(() => loadRecents());
+  const [recentsOpen, setRecentsOpen] = useState(false);
+  const recentsRef = useRef<HTMLDivElement | null>(null);
 
   function update<K extends keyof BirthInput>(key: K, value: BirthInput[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
+
+  // Sync the form when the initial input changes (e.g. opening the edit form).
+  useEffect(() => {
+    if (!initial) return;
+    setForm(initial);
+    setCzValue(
+      `${countryForZone(initial.timeZone ?? "")?.code ?? DEFAULT_COUNTRY}|${initial.timeZone}`,
+    );
+  }, [initial]);
 
   // Persist recents to localStorage whenever they change.
   useEffect(() => {
@@ -85,6 +127,18 @@ export default function BirthForm({ onSubmit }: Props) {
       /* ignore storage errors */
     }
   }, [recents]);
+
+  // Close the recents dropdown on outside click.
+  useEffect(() => {
+    if (!recentsOpen) return;
+    function onDown(e: MouseEvent) {
+      if (recentsRef.current && !recentsRef.current.contains(e.target as Node)) {
+        setRecentsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [recentsOpen]);
 
   // Live UTC offset for the chosen zone on the chosen date (DST-aware).
   const offset = useMemo(() => resolveOffsetHours(form), [form]);
@@ -96,16 +150,20 @@ export default function BirthForm({ onSubmit }: Props) {
     if (zone) update("timeZone", zone);
   }
 
-  // Save an input to recents (dedupe by name, newest first).
+  // Save an input to recents (dedupe by id, newest first).
   function saveRecent(input: BirthInput) {
-    setRecents((list) => {
-      const filtered = list.filter(
-        (r) =>
-          (r.name ?? "").trim().toLowerCase() !==
-          (input.name ?? "").trim().toLowerCase(),
-      );
-      return [input, ...filtered].slice(0, 20);
-    });
+    // Compute the next list from what's currently persisted, so this works even
+    // if the component is about to unmount (e.g. the edit panel closes on
+    // submit). The setRecents updater is NOT guaranteed to run on unmount, so
+    // we must write localStorage directly here rather than inside the updater.
+    const current = loadRecents();
+    const next = [input, ...current.filter((r) => r.id !== input.id)].slice(0, 20);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      /* ignore storage errors */
+    }
+    setRecents(next);
   }
 
   // Load a saved input back into the form.
@@ -113,6 +171,13 @@ export default function BirthForm({ onSubmit }: Props) {
     setForm(input);
     const cz = `${countryForZone(input.timeZone ?? "")?.code ?? DEFAULT_COUNTRY}|${input.timeZone}`;
     setCzValue(cz);
+  }
+
+  // Select a saved input: load it into the form and generate the kundli.
+  function selectRecent(input: BirthInput) {
+    loadRecent(input);
+    setRecentsOpen(false);
+    onSubmit(input);
   }
 
   // Remove a saved input.
@@ -127,7 +192,12 @@ export default function BirthForm({ onSubmit }: Props) {
       onSubmit={(e) => {
         e.preventDefault();
         if (!form.name?.trim()) return;
-        const input = { ...form, name: form.name.trim() };
+        const input = {
+          ...form,
+          name: form.name.trim(),
+          id: form.id ?? newId(),
+        };
+        setForm(input);
         saveRecent(input);
         onSubmit(input);
       }}
@@ -207,40 +277,97 @@ export default function BirthForm({ onSubmit }: Props) {
         </div>
       </div>
 
+      <div className="field-row">
+        <div className="field">
+          <label>Varshphal Start Year</label>
+          <input
+            type="number"
+            min={form.year}
+            max={form.year + 120}
+            value={form.varshphalStartYear ?? new Date().getFullYear()}
+            onChange={(e) =>
+              update("varshphalStartYear", Number(e.target.value) || form.year)
+            }
+          />
+        </div>
+        <div className="field">
+          <label>Varshphal End Year</label>
+          <input
+            type="number"
+            min={form.year}
+            max={form.year + 120}
+            value={form.varshphalEndYear ?? new Date().getFullYear()}
+            onChange={(e) =>
+              update("varshphalEndYear", Number(e.target.value) || form.year)
+            }
+          />
+        </div>
+      </div>
+
       <button type="submit" className="primary">
         Generate Kundli
       </button>
     </form>
 
     {recents.length > 0 && (
-      <div className="recents">
-        <h3>Recent</h3>
-        <ul className="recents-list">
-          {recents.map((r, i) => (
-            <li key={`${r.name}-${i}`} className="recents-item">
-              <button
-                type="button"
-                className="recents-load"
-                onClick={() => loadRecent(r)}
-                title="Load into form"
-              >
-                <span className="recents-name">{r.name}</span>
-                <span className="recents-meta">
-                  {pad(r.day)}/{pad(r.month)}/{pad(r.year, 4)} ·{" "}
-                  {pad(r.hour)}:{pad(r.minute)}
-                </span>
-              </button>
-              <button
-                type="button"
-                className="recents-remove"
-                onClick={() => removeRecent(i)}
-                title="Remove"
-              >
-                ×
-              </button>
-            </li>
-          ))}
-        </ul>
+      <div className="recents" ref={recentsRef}>
+        <button
+          type="button"
+          className="recents-toggle"
+          onClick={() => setRecentsOpen((o) => !o)}
+          aria-expanded={recentsOpen}
+        >
+          <span>Recent Kundli ({recents.length})</span>
+          <span className={recentsOpen ? "recents-caret open" : "recents-caret"}>
+            ▾
+          </span>
+        </button>
+
+        {recentsOpen && (
+          <ul className="recents-menu">
+            {recents.map((r, i) => (
+              <li key={`${r.name}-${i}`} className="recents-item">
+                <button
+                  type="button"
+                  className="recents-load"
+                  onClick={() => selectRecent(r)}
+                  title="Load this chart"
+                >
+                  <span className="recents-name">{r.name || "Unnamed"}</span>
+                  <span className="recents-meta">
+                    {pad(r.day)}/{pad(r.month)}/{pad(r.year, 4)} ·{" "}
+                    {pad(r.hour)}:{pad(r.minute)}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="recents-remove"
+                  onClick={() => removeRecent(i)}
+                  title="Delete"
+                  aria-label="Delete"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 6h18" />
+                    <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" />
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                    <path d="M10 11v6" />
+                    <path d="M14 11v6" />
+                  </svg>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     )}
     </>

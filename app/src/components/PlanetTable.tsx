@@ -29,7 +29,7 @@ export default function PlanetTable({ result }: Props) {
     <div className="panel">
       <h3>Planetary Positions (Sidereal · Lahiri)</h3>
       <div className="table-scroll">
-        <table className="data-table">
+        <table className="data-table compact">
           <thead>
             <tr>
               <th>Planet</th>
