@@ -300,7 +300,7 @@
               <td><strong>{{ r.total }}</strong></td>
               <td>{{ r.required }}</td>
               <td>{{ r.ratio }}</td>
-              <td>{% if r.strong %}<span class="kp-good">Strong</span>{% else %}<span class="kp-bad">Weak</span>{% endif %}</td>
+              <td><span class="kp-{{ r.strengthTone }}">{{ r.strengthLabel }}</span></td>
             </tr>
           {%- endfor -%}
         </tbody>
@@ -372,7 +372,7 @@
               <td>{{ r.signShort }} {{ r.sign }}</td>
               <td>{{ r.house }}</td>
               {%- for v in r.bav -%}<td>{{ v }}</td>{%- endfor -%}
-              <td class="{% if r.strong %}kp-good{% elsif r.weak %}kp-bad{% endif %}"><strong>{{ r.sav }}</strong></td>
+              <td class="{% if r.savTone != "" %}kp-{{ r.savTone }}{% endif %}"><strong>{{ r.sav }}</strong></td>
             </tr>
           {%- endfor -%}
         </tbody>
@@ -402,7 +402,7 @@
           {%- for d in doshas -%}
             <li>
               <strong>{{ d.name }}</strong> —
-              {% if d.present %}<span class="kp-bad">Present</span>{% else %}<span class="kp-good">Absent</span>{% endif %}
+              <span class="kp-{{ d.statusTone }}">{{ d.statusLabel }}</span>
               <br />{{ d.detail }}
             </li>
           {%- endfor -%}

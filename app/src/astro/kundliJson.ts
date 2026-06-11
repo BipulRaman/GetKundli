@@ -85,7 +85,13 @@ export interface KundliJson {
     rows: AshtakavargaRow[];
   };
   yogas: { name: string; description: string }[];
-  doshas: { name: string; present: boolean; detail: string }[];
+  doshas: {
+    name: string;
+    present: boolean;
+    statusLabel: string;
+    statusTone: "good" | "bad";
+    detail: string;
+  }[];
   varshphal: {
     range: string;
     years: VarshphalYearView[];
@@ -151,6 +157,8 @@ export interface ShadbalaRow {
   required: string;
   ratio: string;
   strong: boolean;
+  strengthLabel: string;
+  strengthTone: "good" | "bad";
   rank: number;
 }
 
@@ -163,6 +171,7 @@ export interface AshtakavargaRow {
   sav: number;
   strong: boolean;
   weak: boolean;
+  savTone: "good" | "bad" | "";
 }
 
 export interface VarshphalYearView {
@@ -332,6 +341,8 @@ export function buildKundliJson(
       required: b.required.toFixed(2),
       ratio: `${b.ratio.toFixed(2)}×`,
       strong: b.ratio >= 1,
+      strengthLabel: b.ratio >= 1 ? "Strong" : "Weak",
+      strengthTone: b.ratio >= 1 ? "good" : "bad",
       rank: b.rank,
     };
   });
@@ -387,6 +398,7 @@ export function buildKundliJson(
       sav: savVal,
       strong: savVal >= 30,
       weak: savVal <= 25,
+      savTone: savVal >= 30 ? "good" : savVal <= 25 ? "bad" : "",
     };
   });
 
@@ -508,6 +520,8 @@ export function buildKundliJson(
     doshas: result.doshas.map((d) => ({
       name: d.name,
       present: d.present,
+      statusLabel: d.present ? "Present" : "Absent",
+      statusTone: d.present ? "bad" : "good",
       detail: d.detail,
     })),
     varshphal: {
