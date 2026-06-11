@@ -132,6 +132,7 @@ export function computePanchang(
   latitude: number,
   longitude: number,
   varaIndex: number,
+  localHourDecimal: number,
 ): Panchang {
   const elongation = norm360(moonSidereal - sunSidereal);
 
@@ -146,14 +147,13 @@ export function computePanchang(
   // Karana: 6° each, 60 per lunar month.
   const karanaIdx = Math.floor(elongation / 6); // 0..59
 
-  // Sunrise / sunset for the birth date at the location.
+  // Sunrise / sunset for the civil birth date at the location.
   let sunrise: Date | null = null;
   let sunset: Date | null = null;
   try {
     const observer = new Astronomy.Observer(latitude, longitude, 0);
-    const dayStart = new Date(
-      Date.UTC(utc.getUTCFullYear(), utc.getUTCMonth(), utc.getUTCDate(), 0, 0, 0),
-    );
+    // Rewind exactly by the civil time to find the UTC instant of local midnight.
+    const dayStart = new Date(utc.getTime() - localHourDecimal * 3600000);
     const rise = Astronomy.SearchRiseSet(
       Astronomy.Body.Sun,
       observer,

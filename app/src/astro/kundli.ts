@@ -73,6 +73,7 @@ export function generateKundli(input: BirthInput, now: Date = new Date()): Detai
 
   // Panchang (use the local weekday of the birth date).
   const localWeekday = new Date(input.year, input.month - 1, input.day).getDay();
+  const localHourDecimal = input.hour + input.minute / 60 + input.second / 3600;
   const panchang = computePanchang(
     sun.siderealLongitude,
     moon.siderealLongitude,
@@ -81,6 +82,7 @@ export function generateKundli(input: BirthInput, now: Date = new Date()): Detai
     input.latitude,
     input.longitude,
     localWeekday,
+    localHourDecimal,
   );
 
   // Dignities & combustion.
