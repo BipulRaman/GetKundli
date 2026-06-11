@@ -584,8 +584,14 @@ body {
   background: #fff;
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
-  padding: 0.6in 0.7in 0.8in;
+  padding: 0.6in 0.7in 0.45in;
   scroll-margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+/* Push the page-number footer to the bottom of each page box. */
+.doc-page > .doc-page-no {
+  margin-top: auto;
 }
 
 /* ---- Mobile top bar & nav drawer (hidden on desktop) ---- */
@@ -770,6 +776,15 @@ body.nav-locked {
 @page {
   size: letter;
   margin: 14mm;
+  /* Bottom-right running page number, sitting in the page margin box so it
+     always prints at the bottom of every physical page. */
+  @bottom-right {
+    content: "Page " counter(page);
+    font-family: Calibri, "Segoe UI", sans-serif;
+    font-size: 8pt;
+    letter-spacing: 0.1em;
+    color: #9a9183;
+  }
 }
 @media print {
   body {
@@ -804,6 +819,11 @@ body.nav-locked {
   .doc-page:last-child {
     break-after: auto;
     page-break-after: auto;
+  }
+  /* In print, page numbers are emitted by the @page margin box below, so the
+     per-section markers are hidden to avoid duplicates mid-page. */
+  .doc-page-no {
+    display: none;
   }
   /* Preserve background colours / highlights exactly as seen. */
   * {

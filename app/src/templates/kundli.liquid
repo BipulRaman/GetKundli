@@ -64,8 +64,8 @@
     /* Masthead */
     .kp-head { margin-bottom: 1.6rem; padding-bottom: 1rem; border-bottom: 2px solid var(--accent); }
     .kp-eyebrow {
-      margin: 0 0 0.4rem;
-      font-size: 0.66rem;
+      margin: 0 0 0.5rem;
+      font-size: 0.95rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.3em;
@@ -181,14 +181,27 @@
       letter-spacing: 0.04em;
     }
     .doc-page-no {
-      display: block;
-      margin-top: 0.8rem;
-      text-align: right;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      margin-top: 1.6rem;
+      padding-top: 0.6rem;
+      border-top: 1px solid var(--hair);
       color: var(--faint);
       font-size: 0.66rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
     }
+    .doc-foot-brand {
+      text-transform: none;
+      letter-spacing: 0.04em;
+    }
+    .doc-foot-brand a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .doc-foot-brand a:hover { text-decoration: underline; }
 
     @media (max-width: 720px) {
       .kp-cols { grid-template-columns: 1fr; }
@@ -239,7 +252,7 @@
       <li><span>Sunset</span><strong>{{ panchang.sunset }}</strong></li>
       <li><span>Lunar phase</span><strong>{{ panchang.moonPhase }}</strong></li>
     </ul>
-    <span class="doc-page-no">Page 1</span>
+    <span class="doc-page-no"><span class="doc-foot-brand">Vedic Birth Chart | Janma Kundli | <a href="https://bipul.in/GetKundli">https://bipul.in/GetKundli</a></span><span>Page 1</span></span>
   </section>
 
   <section id="planets" class="doc-page">
@@ -271,7 +284,7 @@
         </tbody>
       </table>
     </div>
-    <span class="doc-page-no">Page 2</span>
+    <span class="doc-page-no"><span class="doc-foot-brand">Vedic Birth Chart | Janma Kundli | <a href="https://bipul.in/GetKundli">https://bipul.in/GetKundli</a></span><span>Page 2</span></span>
   </section>
 
   <section id="shadbala" class="doc-page">
@@ -306,7 +319,7 @@
         </tbody>
       </table>
     </div>
-    <span class="doc-page-no">Page 3</span>
+    <span class="doc-page-no"><span class="doc-foot-brand">Vedic Birth Chart | Janma Kundli | <a href="https://bipul.in/GetKundli">https://bipul.in/GetKundli</a></span><span>Page 3</span></span>
   </section>
 
   <section id="charts" class="doc-page">
@@ -321,7 +334,7 @@
         </figure>
       {%- endfor -%}
     </div>
-    <span class="doc-page-no">Page 4</span>
+    <span class="doc-page-no"><span class="doc-foot-brand">Vedic Birth Chart | Janma Kundli | <a href="https://bipul.in/GetKundli">https://bipul.in/GetKundli</a></span><span>Page 4</span></span>
   </section>
 
   <section id="dashas" class="doc-page">
@@ -348,7 +361,7 @@
         </tbody>
       </table>
     </div>
-    <span class="doc-page-no">Page 5</span>
+    <span class="doc-page-no"><span class="doc-foot-brand">Vedic Birth Chart | Janma Kundli | <a href="https://bipul.in/GetKundli">https://bipul.in/GetKundli</a></span><span>Page 5</span></span>
   </section>
 
   <section id="ashtaka" class="doc-page">
@@ -378,7 +391,7 @@
         </tbody>
       </table>
     </div>
-    <span class="doc-page-no">Page 6</span>
+    <span class="doc-page-no"><span class="doc-foot-brand">Vedic Birth Chart | Janma Kundli | <a href="https://bipul.in/GetKundli">https://bipul.in/GetKundli</a></span><span>Page 6</span></span>
   </section>
 
   <section id="yogas" class="doc-page">
@@ -409,7 +422,7 @@
         </ul>
       </div>
     </div>
-    <span class="doc-page-no">Page 7</span>
+    <span class="doc-page-no"><span class="doc-foot-brand">Vedic Birth Chart | Janma Kundli | <a href="https://bipul.in/GetKundli">https://bipul.in/GetKundli</a></span><span>Page 7</span></span>
   </section>
 
   <section id="varshphal" class="doc-page">
@@ -444,7 +457,7 @@
         </div>
       </div>
     {%- endfor -%}
-    <span class="doc-page-no">Page 8</span>
+    <span class="doc-page-no"><span class="doc-foot-brand">Vedic Birth Chart | Janma Kundli | <a href="https://bipul.in/GetKundli">https://bipul.in/GetKundli</a></span><span>Page 8</span></span>
   </section>
 
   <section id="interpretation" class="doc-page">
@@ -481,7 +494,7 @@
         {{ interpretation.current.antarText }}
       </p>
     {%- endif -%}
-    <span class="doc-page-no">Page 9</span>
+    <span class="doc-page-no"><span class="doc-foot-brand">Vedic Birth Chart | Janma Kundli | <a href="https://bipul.in/GetKundli">https://bipul.in/GetKundli</a></span><span>Page 9</span></span>
   </section>
 
   <footer class="kp-foot">Generated {{ meta.generatedAt }} · Style: {{ meta.style }}</footer>
