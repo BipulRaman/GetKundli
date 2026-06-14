@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { Liquid } from "liquidjs";
 import type { BirthInput } from "./astro/types";
 import type { DetailedKundli } from "./astro/kundli";
@@ -112,6 +112,110 @@ function buildExportHtml(bodyHtml: string, title: string): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${title}</title><style>${css}</style></head><body>${bodyHtml}</body></html>`;
 }
 
+/** Refined celestial emblem (yantra ring + inscribed square) for brand surfaces. */
+function BrandMark({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 40 40" fill="none" aria-hidden="true">
+      <circle cx="20" cy="20" r="18.2" stroke="currentColor" strokeWidth="1.3" opacity="0.45" />
+      <circle cx="20" cy="20" r="13.4" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M20 6.6 33.4 20 20 33.4 6.6 20Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      <path d="M20 11.7 28.3 20 20 28.3 11.7 20Z" stroke="currentColor" strokeWidth="1" opacity="0.55" />
+      <circle cx="20" cy="20" r="1.9" fill="currentColor" />
+      <path d="M20 1.4v3.2M20 35.4v3.2M1.4 20h3.2M35.4 20h3.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" opacity="0.7" />
+    </svg>
+  );
+}
+
+/** Crisp line icons for the landing feature list. */
+const FEATURE_ICONS = {
+  styles: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <path d="M3 12h18M12 3v18" />
+    </svg>
+  ),
+  charts: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </svg>
+  ),
+  dashas: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3.5 2" />
+    </svg>
+  ),
+  print: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 9V3h12v6" />
+      <path d="M6 18H4a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2" />
+      <rect x="6" y="14" width="12" height="7" rx="1" />
+    </svg>
+  ),
+};
+
+/** Compact line icons for each document section in the sidebar. */
+const PAGE_ICONS: Record<PageId, ReactElement> = {
+  overview: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 3h9l5 5v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
+      <path d="M14 3v5h5" />
+      <path d="M8 13h8M8 17h6" />
+    </svg>
+  ),
+  planets: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.4" />
+      <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.4 5.4l2 2M16.6 16.6l2 2M18.6 5.4l-2 2M7.4 16.6l-2 2" />
+    </svg>
+  ),
+  shadbala: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 20V11M10 20V5M15 20v-6M20 20V8" />
+    </svg>
+  ),
+  charts: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3.5" y="3.5" width="7" height="7" rx="1.4" />
+      <rect x="13.5" y="3.5" width="7" height="7" rx="1.4" />
+      <rect x="3.5" y="13.5" width="7" height="7" rx="1.4" />
+      <rect x="13.5" y="13.5" width="7" height="7" rx="1.4" />
+    </svg>
+  ),
+  dashas: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3.5 2" />
+    </svg>
+  ),
+  ashtaka: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3.5" y="4" width="17" height="16" rx="1.8" />
+      <path d="M3.5 9.5h17M3.5 15h17M9.5 4v16M15 4v16" />
+    </svg>
+  ),
+  yogas: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3l1.9 5.4L19.5 10l-5.6 1.6L12 17l-1.9-5.4L4.5 10l5.6-1.6L12 3Z" />
+    </svg>
+  ),
+  varshphal: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3.5" y="4.5" width="17" height="16" rx="2" />
+      <path d="M3.5 9.5h17M8 2.5v4M16 2.5v4" />
+    </svg>
+  ),
+  interpretation: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M5 4a2 2 0 0 1 2-2h12v16H7a2 2 0 0 0-2 2V4Z" />
+      <path d="M9 6h6M9 10h6" />
+    </svg>
+  ),
+};
+
 export default function App() {
   const [result, setResult] = useState<DetailedKundli | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -203,6 +307,14 @@ export default function App() {
     setOpenGroups({});
   }
 
+  function handleExport() {
+    download(
+      `${baseName}.html`,
+      buildExportHtml(html, subject || "Kundli"),
+      "text/html",
+    );
+  }
+
   const navGroups = useMemo(() => {
     if (!result) return {} as Record<string, { id: string; label: string }[]>;
     return {
@@ -272,8 +384,13 @@ export default function App() {
         <div className="landing-bg" aria-hidden />
         <div className="landing-inner">
           <section className="landing-hero">
-            <span className="landing-badge">✦ Vedic Astrology</span>
-            <h1 className="landing-title">Kundli Maker</h1>
+            <div className="landing-brand">
+              <BrandMark className="landing-mark" />
+              <span className="landing-badge">Vedic Astrology · Sidereal</span>
+            </div>
+            <h1 className="landing-title">
+              Kundli <span className="accent">Maker</span>
+            </h1>
             <p className="landing-tagline">
               Generate a complete sidereal birth chart — divisional charts,
               dashas, ashtakavarga, yogas &amp; Varshphal — as a clean,
@@ -281,28 +398,28 @@ export default function App() {
             </p>
             <ul className="landing-features">
               <li>
-                <span className="lf-icon">◓</span>
+                <span className="lf-icon">{FEATURE_ICONS.styles}</span>
                 <div>
                   <strong>North · South · East</strong>
                   <p>Switch chart styles instantly</p>
                 </div>
               </li>
               <li>
-                <span className="lf-icon">✶</span>
+                <span className="lf-icon">{FEATURE_ICONS.charts}</span>
                 <div>
                   <strong>16 Divisional Charts</strong>
                   <p>D1 through D60 with dignities</p>
                 </div>
               </li>
               <li>
-                <span className="lf-icon">◷</span>
+                <span className="lf-icon">{FEATURE_ICONS.dashas}</span>
                 <div>
                   <strong>Dashas &amp; Transits</strong>
                   <p>Vimshottari periods &amp; Varshphal</p>
                 </div>
               </li>
               <li>
-                <span className="lf-icon">⎙</span>
+                <span className="lf-icon">{FEATURE_ICONS.print}</span>
                 <div>
                   <strong>Print &amp; Save PDF</strong>
                   <p>Page-wise, Letter-size document</p>
@@ -312,7 +429,10 @@ export default function App() {
           </section>
 
           <section className="landing-card">
-            <h2 className="landing-card-title">Enter birth details</h2>
+            <header className="landing-card-head">
+              <span className="landing-card-eyebrow">Birth details</span>
+              <h2 className="landing-card-title">Cast your chart</h2>
+            </header>
             <BirthForm onSubmit={handleSubmit} style={style} onStyleChange={setStyle} />
             {error && <p className="error">{error}</p>}
           </section>
@@ -335,7 +455,7 @@ export default function App() {
         </button>
         <span className="mobile-bar-title">{subject || "Kundli"}</span>
         <button className="mobile-print" onClick={() => window.print()}>
-          Print
+          PDF / Print
         </button>
       </header>
 
@@ -349,8 +469,11 @@ export default function App() {
       {/* ---- Left navigation ---- */}
       <nav className={`app-nav${navOpen ? " open" : ""}`} ref={navRef}>
         <div className="nav-brand">
-          <h1>Kundli</h1>
-          <span>Vedic birth chart</span>
+          <BrandMark className="nav-mark" />
+          <div className="nav-wordmark">
+            <h1>Kundli</h1>
+            <span>Vedic birth chart</span>
+          </div>
         </div>
 
         <div className="nav-subject">
@@ -371,7 +494,7 @@ export default function App() {
         </div>
 
         <ul className="nav-pages">
-          {PAGES.map((p, i) => {
+          {PAGES.map((p) => {
             const children = navGroups[p.id] ?? [];
             const hasChildren = children.length > 0;
             const open = openGroups[p.id];
@@ -387,8 +510,8 @@ export default function App() {
                       }
                     }}
                   >
-                    <span className="nav-num">{i + 1}</span>
-                    {p.label}
+                    <span className="nav-ic">{PAGE_ICONS[p.id]}</span>
+                    <span className="nav-label">{p.label}</span>
                   </button>
                   {hasChildren && (
                     <button
@@ -425,21 +548,14 @@ export default function App() {
         </ul>
 
         <div className="nav-controls">
-          <button className="nav-print" onClick={() => window.print()}>
-            Print / Save PDF
-          </button>
-          <button
-            className="nav-export"
-            onClick={() =>
-              download(
-                `${baseName}.html`,
-                buildExportHtml(html, subject || "Kundli"),
-                "text/html",
-              )
-            }
-          >
-            Export HTML
-          </button>
+          <div className="nav-actions">
+            <button className="nav-print" onClick={() => window.print()}>
+              PDF / Print
+            </button>
+            <button className="nav-export" onClick={handleExport}>
+              Export
+            </button>
+          </div>
         </div>
       </nav>
 
